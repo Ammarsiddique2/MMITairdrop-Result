@@ -1,0 +1,279 @@
+
+import * as React from "react";
+import Grid from "@mui/material/Grid";
+import Table from "@mui/material/Table";
+import TableBody from "@mui/material/TableBody";
+import TableCell from "@mui/material/TableCell";
+import TableContainer from "@mui/material/TableContainer";
+import TableHead from "@mui/material/TableHead";
+import TableRow from "@mui/material/TableRow";
+import Paper from "@mui/material/Paper";
+import Swal from "sweetalert2";
+import { useState, useEffect } from "react";
+import { useNavigate  , Link , useLocation } from 'react-router-dom';
+import { Buffer } from 'buffer';
+
+
+import "./index.css";
+import { Container } from "@mui/material";
+
+
+const SideBar = () => {
+  var location = useLocation();
+  var navigate = useNavigate();
+  
+  
+  const [imagedd, setImage] = useState([]);
+  const [data, setdata] = useState();
+  const [todo, setTodo] = useState([]);
+  const [email, setEmail] = useState("");
+  var igData = [];
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+
+
+  async function HandleClick(e) {
+    // setdata(e.target.innerText);
+    // setEmail(e.target.innerText);
+    let emailValue = e.target.innerText;
+     if (emailValue === undefined) {
+      return;
+    }
+      fetch("http://localhost:8081/image?id=8")
+        .then(response => response.blob())
+        .then(blob => {
+          const url = URL.createObjectURL(blob);
+          console.log(url);
+        }); 
+  }
+
+//////////////////
+
+async function chackimgs(e){
+  let emailValue = e.target.value;
+  console.log(emailValue);
+  const imageConvert = await fetch( "https://mmitairdrop.com:8081/image?email=" + emailValue)
+  const Converted = await imageConvert.json()
+  console.log(Converted.length)
+  await setdata(Converted.length)
+}
+ //////copy//////
+ function copy(e) {
+  var copyText = e.target.innerText;
+  console.log(copyText)
+  var textField = document.createElement("textarea");
+  textField.innerText = copyText;
+  document.body.appendChild(textField);
+  textField.select();
+  document.execCommand("copy");
+  textField.remove();
+  Swal.fire({  
+    icon: 'success',  
+    title: 'Copy To Clipboard.', 
+    showConfirmButton: false,  
+    timer: 500   
+  }); 
+}
+//////copy//////
+
+
+
+  const GetData = async () => {
+    const walletAddressRegExp = /^(0x)?[0-9a-fA-F]{40}$/;
+    let response = await (
+      await fetch("https://mmitairdrop.com:8081/getdataregister")
+    ).json();
+
+
+        // for (var i = 0; i < response.length; i++) {
+        //   for (var j = 0; j < imagedd.length; j++) {
+
+        //     // if (response[i].address === null || walletAddressRegExp.test(response[i].address) === false || response[i].email !== imagedd[j].email ) {
+        //     //   response.splice(i, 1)
+        //     //   i--; 
+        //     // }
+            
+        //     // if (response[i].address === null || walletAddressRegExp.test(response[i].address) === false || response[i].email !== imagedd[i].email ) {
+        //     //   response.splice(i, 1)
+        //     //   i--; 
+        //     // }
+        //     // console.log(i + " * " + j + " = " + i*j);
+        //   }
+        // }
+        for (var i = 0; i < response.length; i++) {
+         
+            if (response[i].address === null || walletAddressRegExp.test(response[i].address) === false  ) {
+             
+              response.splice(i, 1)
+              i--; 
+            }
+          
+        }
+      //   for (var i = 0; i < imagedd.length; i++) {
+         
+      //     if (imagedd[i].email !== response[0].email) {
+           
+      //       response.splice(i, 1)
+      //       i--; 
+      //     }
+        
+      // }
+        // console.log(imagedd);
+
+
+      await setTodo(response);
+      setTotalPages(Math.ceil(response.length / 16))
+  };
+  const GetWalletData = async () => {
+    let response = await (
+      await fetch("https://mmitairdrop.com:8081/getfilterdata")
+    ).json();
+      console.log(response)
+      setImage(response)
+  };
+  const getItemsForCurrentPage = () => {
+    const startIndex = (currentPage - 1) * 16;
+    const endIndex = startIndex + 16;
+    return todo.slice(startIndex, endIndex);
+  };
+
+//////////////////
+
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const allow = params.get('allow');
+    if (allow === '1') {
+    } else {
+      navigate("/");
+    }
+  });
+
+
+  useEffect(() => {
+    
+  }, [email]);
+
+  useEffect(() => {}, [igData, todo , imagedd ,data,setdata]);
+
+  useEffect(() => {
+
+    GetData();
+    GetWalletData();
+   
+  }, []);
+  
+
+  return (
+    <div>
+      <Grid container>
+<Container>
+  <h1 style={{color:'white', marginTop:'10px',marginBottom:'-5px',textAlign:'center'}}>MMIT AirDrop</h1>
+  <h6 style={{color:'white', marginTop:'10px',marginBottom:'5px',textAlign:'center'}}>All Members Details With Status</h6>
+</Container>
+
+        {/* Sidebar */}
+   
+        <Grid item lg={12}>
+          <TableContainer component={Paper} style={{ width: "100%" }}>
+            <Table
+              sx={{ minWidth: 650 }}
+              size="small"
+              aria-label="a dense table"
+            >
+              <TableHead>
+                <TableRow>
+                <TableCell align="left">
+                    <b>Address</b>
+                  </TableCell>
+                  <TableCell align="center">
+                    <b>UserName</b>
+                  </TableCell>
+                  <TableCell align="center">
+                    <b>Email</b>
+                  </TableCell>
+
+                  <TableCell align="center">
+                    <b>Bind Status</b>
+                  </TableCell>
+                  <TableCell  align="center">
+                    <b>Snap Status</b>
+                  </TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {/* {todo.map((row, index) => (
+                  <TableRow
+                    key={index}
+                    sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                  >
+                    <TableCell align="left">{row.username}</TableCell>
+                    <TableCell onClick={HandleClick} align="center">
+                      {row.email}
+                    </TableCell>
+                  </TableRow>
+                ))} */}
+             
+                  {getItemsForCurrentPage().map((row, index) => (
+                         
+                   <TableRow
+                        key={index}
+                        sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
+                      >
+                        <TableCell onClick={copy} align="left">{row.address}</TableCell>
+                        <TableCell align="center">{row.username}</TableCell>
+                       
+                        <TableCell onClick={HandleClick} align="center">
+                          {row.email}
+                        </TableCell> 
+                        <TableCell align="left">
+                        <p id="adrs" style={{display:'none'}}>{row.address}</p>
+                          {row.address !== null ?
+                          <button className="button"  style={{background:'transparent',fontSize:'14px',border:'0px'}} data-tooltip={row.address.substr(0 , 6)+'...'+row.address.substr(36 , 41)}><i class="fa fa-check"></i></button>
+                            : 
+                          <button className="button" style={{background:'transparent',fontSize:'14px',border:'0px'}} > <i class="fa fa-circle-thin"></i></button>
+                          }
+                        </TableCell> 
+                        <TableCell align="right">
+                        {/* <button onMouseOver={chackimgs} value={row.email} style={{fontSize:'14px'}}>Chack <i class="fa fa-file-photo-o"></i></button> */}
+                        <div className="button" data-tooltip={data >= 4 ? 'Varified':'NonVarified'}>
+                          <div className="button-wrapper">
+                            <div className="text"><button onMouseOver={chackimgs} value={row.email} style={{fontSize:'14px',color:'white',background:'transparent',border:'0px'}}>Chack <i class="fa fa-file-photo-o"></i></button></div>
+                            <span className="icon">
+                             {data}
+                            </span>
+                          </div>
+                        </div>
+                        </TableCell> 
+                        
+                      </TableRow>
+                    
+                  ))}
+                  <button
+                    onClick={() => setCurrentPage((prev) => prev - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    Previous
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage((prev) => prev + 1)}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                  </button>
+                  
+                  
+                  <span> No: {currentPage} </span>
+                  <span>Total Pages: {totalPages} </span>
+             
+              </TableBody>
+            </Table>
+          </TableContainer>
+        </Grid>
+      </Grid>
+    </div>
+  );
+};
+
+export default SideBar;
